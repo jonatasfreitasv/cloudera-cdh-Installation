@@ -5,15 +5,23 @@ rpm -ihv epel-release-6-8.noarch.rpm
 sudo yum update
 sudo yum install nano wget htop
 
-sudo rpm --import https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/RPM-GPG-KEY-cloudera
-sudo wget https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/cloudera-manager.repo -P /etc/yum.repos.d/
-
 # Install JDK manual version 1.8
 wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u171-b11/512cd62ec5174c3487ac17c61aaa89e8/jdk-8u171-linux-x64.tar.gz"
 tar xzf jdk-8u171-linux-x64.tar.gz
-mv jdk1.8.0_171 /usr/java
+sudo mkdir /usr/java/
+sudo mv jdk1.8.0_171 /usr/java/
+
+wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.46.tar.gz
+tar zxvf mysql-connector-java-5.1.46.tar.gz
+
+sudo mkdir -p /usr/share/java/
+cd mysql-connector-java-5.1.46
+sudo cp mysql-connector-java-5.1.46-bin.jar /usr/share/java/mysql-connector-java.jar
 
 # Node 1
+sudo rpm --import https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/RPM-GPG-KEY-cloudera
+sudo wget https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/cloudera-manager.repo -P /etc/yum.repos.d/
+
 sudo yum install cloudera-manager-daemons cloudera-manager-server
 
 wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
@@ -24,24 +32,16 @@ sudo systemctl start mysqld
 sudo systemctl enable mysqld
 sudo /usr/bin/mysql_secure_installation
 
-wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.46.tar.gz
-tar zxvf mysql-connector-java-5.1.46.tar.gz
+mysql -u root -p < create_databases.sql
 
-sudo mkdir -p /usr/share/java/
-cd mysql-connector-java-5.1.46
-sudo cp mysql-connector-java-5.1.46-bin.jar /usr/share/java/mysql-connector-java.jar
-
-CREATE DATABASE scm DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-GRANT ALL ON <database>.* TO '<user>'@'%' IDENTIFIED BY '<password>';
-
-/usr/share/cmf/schema/scm_prepare_database.sh mysql scm root Fast421566
+sudo /usr/share/cmf/schema/scm_prepare_database.sh mysql scm root Fast421566
 
 sudo systemctl start cloudera-scm-server
 
 http://node-1:7180
 
 # Install Spark 2
-mkdir -p /var/log/spark2/lineage
+sudo mkdir -p /var/log/spark2/lineage
 sudo chown hdfs:hdfs /var/log/spark2/lineage
 https://www.cloudera.com/documentation/spark2/latest/topics/spark2_installing.html
 
